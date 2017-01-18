@@ -17,7 +17,7 @@ io.on('connection', function (socket) {
 
     socket.on('privateMessage', function (message, id) {
         if (id in allSockets) {
-            allSockets[id].emit('privateMessage', message);
+            allSockets[id].emit('privateMessage', {message: message, from: tmpClientId});
             console.log(`${tmpClientId} private for: ${id} data:  ${message}`);
         }
         else {
