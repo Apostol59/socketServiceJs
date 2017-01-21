@@ -24,8 +24,18 @@
             {
                 System.Console.WriteLine(data);
             });
+            //восстановление id при разрыве соединения/падении сервиса
+            socket.On("init", ()=>
+            {
+                 socket.Emit("init", "someUserId");
+                 System.Console.WriteLine("init");
+            });
             
+            //если требуется незамедлительное использование
             socket.Emit("init", "someUserId");
+            //сообщение init для всех,
+            //все, подписанные, на init пошлют свои id
+            socket.Emit("admin","reInit");
             socket.Emit("admin", "getActiveIds");
             socket.Emit("privateMessage", "some text", "otherUser");
             socket.Emit("sharedMessage", "Yeachhhh");
