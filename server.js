@@ -4,7 +4,7 @@
 const PORT = 1337;
 const io = require('socket.io')(PORT);
 const admin = require('./handlers/adminHandler');
-const adminHandler = new admin.AdminHandler();
+const adminHandler = new admin.AdminHandler(io);
 const allSockets = {};
 console.log(`${PORT} server started`);
 
@@ -15,42 +15,42 @@ io.on('connection', function (socket) {
     socket.on('init', function (id) {
         tmpClientId = id;
         allSockets[id] = socket;
-        console.log(`${id} init`);
+        adminHandler.log(`${id} init`);
     });
 
     socket.on('privateMessage', function (message, id) {
         if (allSockets[id]) {
             allSockets[id].emit('privateMessage', {message: message, from: tmpClientId});
-            console.log(`${tmpClientId} private for: ${id} data:  ${message}`);
+            adminHandler.log(`${tmpClientId} private for: ${id} data:  ${message}`);
         }
         else {
-            console.error(`${tmpClientId} send to ${id}, error, id not found`)
+            adminHandler.error(`${tmpClientId} send to ${id}, error, id not found`)
         }
     });
 
     socket.on('sharedMessage', function (message) {
-        console.log(`${tmpClientId} sharedMessage: ${message}`);
+        adminHandler.log(`${tmpClientId} sharedMessage: ${message}`);
         socket.broadcast.emit('sharedMessage', message);
     });
 
     socket.on('admin', function (command) {
         if (allSockets[tmpClientId]) {
-            console.log(`${tmpClientId} admin with command ${command}`);
+            adminHandler.log(`${tmpClientId} admin with command ${command}`);
             if (adminHandler[command]) {
                 const answer = adminHandler[command](socket, allSockets);
                 allSockets[tmpClientId].emit('admin', answer);
             }
             else {
-                console.log(`error, ${command} not found`)
+                adminHandler.log(`error, ${command} not found, id ${tmpClientId}`)
             }
         }
         else {
-            console.error(` error, id not found`)
+            adminHandler.error(`${tmpClientId} error, id not found`)
         }
     });
 
     socket.on('disconnect', function () {
         delete allSockets[tmpClientId];
-        console.log(`${tmpClientId} client disconnected`);
+        adminHandler.log(`${tmpClientId} client disconnected`);
     });
 });
