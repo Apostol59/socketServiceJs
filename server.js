@@ -6,7 +6,7 @@ const io = require('socket.io')(PORT);
 const admin = require('./handlers/adminHandler');
 const adminHandler = new admin.AdminHandler(io);
 const allSockets = {};
-console.log(`${PORT} server started`);
+adminHandler.log(`${PORT} server started`);
 
 io.on('connection', function (socket) {
     let tmpClientId = '';
@@ -34,23 +34,19 @@ io.on('connection', function (socket) {
     });
 
     socket.on('admin', function (command) {
-        if (allSockets[tmpClientId]) {
-            adminHandler.log(`${tmpClientId} admin with command ${command}`);
-            if (adminHandler[command]) {
-                const answer = adminHandler[command]({
-                    socket: socket,
-                    tmpClientId: tmpClientId,
-                    allSockets: allSockets
-                });
-                allSockets[tmpClientId].emit('admin', answer);
-            }
-            else {
-                adminHandler.log(`error, ${command} not found, id ${tmpClientId}`)
-            }
+        adminHandler.log(`${tmpClientId} admin with command ${command}`);
+        if (adminHandler[command]) {
+            const answer = adminHandler[command]({
+                socket: socket,
+                tmpClientId: tmpClientId,
+                allSockets: allSockets
+            });
+            socket.emit('admin', answer);
         }
         else {
-            adminHandler.error(`${tmpClientId} error, id not found`)
+            adminHandler.log(`${tmpClientId} error, admin command '${command}' not found`)
         }
+
     });
 
     socket.on('disconnect', function () {
