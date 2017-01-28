@@ -41,18 +41,16 @@ class AdminHandler {
 
     log(message) {
         console.log(message);
-        if (this.debugSubscribers)
-            this.debugSubscribers.forEach((socket, tmpClientId, map) => {
-                socket.emit("debugMsg", message);
-            });
+        this.debugSubscribers.forEach((socket, tmpClientId, map) => {
+            socket.emit("debugMsg", message);
+        });
     }
 
     error(message) {
         console.error(message);
-        if (this.errorSubscribers)
-            this.errorSubscribers.forEach((socket, tmpClientId, map) => {
-                socket.emit("errorMsg", message);
-            });
+        this.errorSubscribers.forEach((socket, tmpClientId, map) => {
+            socket.emit("errorMsg", message);
+        });
     }
 
     disconnected(tmpClientId) {
