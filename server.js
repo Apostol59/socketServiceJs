@@ -37,7 +37,11 @@ io.on('connection', function (socket) {
         if (allSockets[tmpClientId]) {
             adminHandler.log(`${tmpClientId} admin with command ${command}`);
             if (adminHandler[command]) {
-                const answer = adminHandler[command](socket, allSockets);
+                const answer = adminHandler[command]({
+                    socket: socket,
+                    tmpClientId: tmpClientId,
+                    allSockets: allSockets
+                });
                 allSockets[tmpClientId].emit('admin', answer);
             }
             else {
@@ -50,6 +54,7 @@ io.on('connection', function (socket) {
     });
 
     socket.on('disconnect', function () {
+        adminHandler.disconnected(tmpClientId);
         delete allSockets[tmpClientId];
         adminHandler.log(`${tmpClientId} client disconnected`);
     });

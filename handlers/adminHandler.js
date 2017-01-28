@@ -4,39 +4,61 @@
 
 
 class AdminHandler {
-    constructor (io){
+    constructor(io) {
         this.io = io;
+        this.debugSubscribers = new Map();
+        this.errorSubscribers = new Map();
     }
-    getActiveIds(socket, allSockets){
+
+    getActiveIds(parameters) {
         const ids = [];
-        for (const id in allSockets) ids.push(id)
+        for (const id in parameters.allSockets) ids.push(id)
         return ids;
     }
-    reInit(socket, allSockets){
-        socket.broadcast.emit('init');
+
+    reInit(parameters) {
+        parameters.socket.broadcast.emit('init');
         return 'reInit done!'
     }
-    subscribeDebug(socket, allSockets){
-        this.debugSubscribers = true;
+
+    subscribeDebug(parameters) {
+        this.debugSubscribers.set(parameters.tmpClientId, parameters.socket);
     }
-    unsubscribeDebug(socket, allSockets){
-        this.debugSubscribers = false;
+
+    unsubscribeDebug(parameters) {
+        if (this.debugSubscribers.has(parameters.tmpClientId))
+            this.debugSubscribers.delete(parameters.tmpClientId);
     }
-    subscribeError(socket, allSockets){
-        this.errorSubscribers = true;
+
+    subscribeError(parameters) {
+        this.errorSubscribers.set(parameters.tmpClientId, parameters.socket);
     }
-    unsubscribeError(socket, allSockets){
-        this.errorSubscribers = false;
+
+    unsubscribeError(parameters) {
+        if (this.errorSubscribers.has(parameters.tmpClientId))
+            this.errorSubscribers.delete(parameters.tmpClientId);
     }
-    log(message){
+
+    log(message) {
         console.log(message);
-        if(this.debugSubscribers)
-            this.io.emit("debug", message);
+        if (this.debugSubscribers)
+            this.debugSubscribers.forEach((socket, tmpClientId, map) => {
+                socket.emit("debugMsg", message);
+            });
     }
-    error(message){
+
+    error(message) {
         console.error(message);
-        if(this.errorSubscribers)
-            this.io.emit("error", message);
+        if (this.errorSubscribers)
+            this.errorSubscribers.forEach((socket, tmpClientId, map) => {
+                socket.emit("errorMsg", message);
+            });
+    }
+
+    disconnected(tmpClientId) {
+        let params = {tmpClientId: tmpClientId};
+        this.unsubscribeError(params);
+        this.unsubscribeDebug(params);
     }
 
 }
